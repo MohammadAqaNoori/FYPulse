@@ -1,0 +1,49 @@
+# Environment
+.env
+.env.local
+.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# ML artifacts
+ml_service/data/raw/
+ml_service/data/processed/
+ml_service/data/embeddings/
+ml_service/models/trained/
+ml_service/models/checkpoints/
+*.pkl
+*.pt
+*.bin
+*.h5
+
+# Node / Frontend
+node_modules/
+frontend/dist/
+frontend/.next/
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.override.yml
