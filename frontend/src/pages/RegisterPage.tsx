@@ -32,7 +32,6 @@ export default function RegisterPage() {
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: unknown }; status?: number }; message?: string }
       if (!e.response) {
-        // Network error — backend not reachable
         setServerError('Cannot reach the server. Make sure the backend is running on port 8000.')
         return
       }
@@ -48,99 +47,89 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
-      <div className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-navy-900 px-4 py-12">
+      {/* Background glow */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-accent-400/5 blur-3xl" />
+      </div>
+
+      <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center">
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 shadow-lg">
-            <Zap size={24} className="text-white" />
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-400 shadow-glow-lg">
+            <Zap size={28} className="text-navy-900" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
-          <p className="mt-1 text-sm text-gray-500">Start discovering your perfect FYP</p>
+          <h1 className="text-3xl font-bold text-white">Create your account</h1>
+          <p className="mt-1 text-sm text-gray-400">Start discovering your perfect FYP</p>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+        <div className="rounded-2xl border border-navy-600 bg-navy-800 p-8 shadow-xl">
           {serverError && (
-            <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+            <div className="mb-5 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400" role="alert">
               {serverError}
             </div>
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
             <div>
-              <label htmlFor="full_name" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Full name
-              </label>
+              <label htmlFor="full_name" className="label">Full name</label>
               <input
                 id="full_name"
                 type="text"
                 autoComplete="name"
                 className="input"
+                placeholder="Mohammad Aqa Noori"
                 {...register('full_name', { required: 'Full name is required' })}
               />
-              {errors.full_name && (
-                <p className="mt-1 text-xs text-red-600">{errors.full_name.message}</p>
-              )}
+              {errors.full_name && <p className="mt-1 text-xs text-red-400">{errors.full_name.message}</p>}
             </div>
 
             <div>
-              <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Email address
-              </label>
+              <label htmlFor="email" className="label">Email address</label>
               <input
                 id="email"
                 type="email"
                 autoComplete="email"
                 className="input"
+                placeholder="you@example.com"
                 {...register('email', {
                   required: 'Email is required',
                   pattern: { value: /\S+@\S+\.\S+/, message: 'Enter a valid email' },
                 })}
               />
-              {errors.email && (
-                <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
-              )}
+              {errors.email && <p className="mt-1 text-xs text-red-400">{errors.email.message}</p>}
             </div>
 
             <div>
-              <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Password
-              </label>
+              <label htmlFor="password" className="label">Password</label>
               <input
                 id="password"
                 type="password"
                 autoComplete="new-password"
                 className="input"
+                placeholder="Min. 8 characters"
                 {...register('password', {
                   required: 'Password is required',
                   minLength: { value: 8, message: 'At least 8 characters' },
                 })}
               />
-              {errors.password && (
-                <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
-              )}
+              {errors.password && <p className="mt-1 text-xs text-red-400">{errors.password.message}</p>}
             </div>
 
             <div>
-              <label
-                htmlFor="confirm_password"
-                className="mb-1.5 block text-sm font-medium text-gray-700"
-              >
-                Confirm password
-              </label>
+              <label htmlFor="confirm_password" className="label">Confirm password</label>
               <input
                 id="confirm_password"
                 type="password"
                 autoComplete="new-password"
                 className="input"
+                placeholder="Repeat your password"
                 {...register('confirm_password', {
                   required: 'Please confirm your password',
                   validate: (v) => v === watch('password') || 'Passwords do not match',
                 })}
               />
-              {errors.confirm_password && (
-                <p className="mt-1 text-xs text-red-600">{errors.confirm_password.message}</p>
-              )}
+              {errors.confirm_password && <p className="mt-1 text-xs text-red-400">{errors.confirm_password.message}</p>}
             </div>
 
             <Button type="submit" className="w-full" size="lg" loading={isSubmitting}>
@@ -151,7 +140,7 @@ export default function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-gray-500">
           Already have an account?{' '}
-          <Link to="/login" className="font-medium text-brand-600 hover:text-brand-700">
+          <Link to="/login" className="font-medium text-accent-400 hover:text-accent-300 transition-colors">
             Sign in
           </Link>
         </p>

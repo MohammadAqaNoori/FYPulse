@@ -17,9 +17,7 @@ export function TagInput({ label, tags, onChange, placeholder = 'Type and press 
     if ((e.key === 'Enter' || e.key === ',') && input.trim()) {
       e.preventDefault()
       const tag = input.trim().toLowerCase()
-      if (!tags.includes(tag)) {
-        onChange([...tags, tag])
-      }
+      if (!tags.includes(tag)) onChange([...tags, tag])
       setInput('')
     }
     if (e.key === 'Backspace' && !input && tags.length) {
@@ -33,23 +31,23 @@ export function TagInput({ label, tags, onChange, placeholder = 'Type and press 
 
   return (
     <div className={className}>
-      <label className="mb-1.5 block text-sm font-medium text-gray-700">{label}</label>
+      <label className="label">{label}</label>
       <div
         className={clsx(
-          'flex min-h-[42px] flex-wrap gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2',
-          'focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500'
+          'flex min-h-[44px] flex-wrap gap-1.5 rounded-lg border border-navy-500 bg-navy-700 px-3 py-2',
+          'focus-within:border-accent-400 focus-within:ring-1 focus-within:ring-accent-400'
         )}
       >
         {tags.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-700"
+            className="inline-flex items-center gap-1 rounded-full bg-accent-400/20 border border-accent-400/30 px-2.5 py-0.5 text-xs font-medium text-accent-300"
           >
             {tag}
             <button
               type="button"
               onClick={() => removeTag(tag)}
-              className="ml-0.5 rounded-full text-brand-500 hover:text-brand-700 focus:outline-none"
+              className="text-accent-400/60 hover:text-accent-300 focus:outline-none"
               aria-label={`Remove ${tag}`}
             >
               <X size={10} />
@@ -61,10 +59,10 @@ export function TagInput({ label, tags, onChange, placeholder = 'Type and press 
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={tags.length === 0 ? placeholder : ''}
-          className="min-w-[120px] flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 focus:outline-none"
+          className="min-w-[120px] flex-1 bg-transparent text-sm text-white placeholder-gray-500 focus:outline-none"
         />
       </div>
-      <p className="mt-1 text-xs text-gray-400">Press Enter or comma to add a tag</p>
+      <p className="mt-1 text-xs text-gray-500">Press Enter or comma to add a tag</p>
     </div>
   )
 }

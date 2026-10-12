@@ -27,31 +27,52 @@ export default function HomePage() {
 
   return (
     <div className="space-y-8">
-      {/* Welcome header */}
-      <div className="rounded-2xl bg-gradient-to-r from-brand-600 to-brand-700 px-8 py-8 text-white shadow-lg">
-        <div className="flex items-start justify-between">
+
+      {/* Hero banner */}
+      <div className="relative overflow-hidden rounded-2xl border border-accent-500/20 bg-gradient-to-br from-navy-800 via-navy-700 to-navy-800 px-8 py-10">
+        {/* Glow blobs */}
+        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent-400/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-10 left-10 h-40 w-40 rounded-full bg-accent-400/5 blur-2xl" />
+
+        <div className="relative flex items-start justify-between">
           <div>
-            <p className="text-brand-200">Welcome back,</p>
-            <h1 className="mt-0.5 text-3xl font-bold">{user?.full_name}</h1>
+            <p className="text-sm font-medium text-accent-400">Welcome back,</p>
+            <h1 className="mt-1 text-4xl font-bold text-white">{user?.full_name}</h1>
             {profileComplete ? (
-              <p className="mt-2 text-brand-100">
-                Your profile is set up — check your personalised recommendations.
+              <p className="mt-2 text-gray-400">
+                Your profile is ready — check your personalised recommendations below.
               </p>
             ) : (
-              <p className="mt-2 text-brand-100">
-                Complete your profile to unlock personalised FYP recommendations.
+              <p className="mt-2 text-gray-400">
+                Complete your profile to unlock AI-powered FYP recommendations.
               </p>
             )}
+            {!profileComplete && (
+              <Link to="/profile?onboarding=true" className="mt-4 inline-flex">
+                <Button size="lg" icon={<ArrowRight size={16} />}>
+                  Set up Profile
+                </Button>
+              </Link>
+            )}
           </div>
-          <Zap size={48} className="hidden opacity-20 sm:block" />
+          <Zap size={64} className="hidden opacity-10 lg:block text-accent-400" />
         </div>
-        {!profileComplete && (
-          <Link
-            to="/profile?onboarding=true"
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50 transition-colors"
-          >
-            Set up profile <ArrowRight size={14} />
-          </Link>
+
+        {/* Stats row */}
+        {profileComplete && (
+          <div className="relative mt-6 flex flex-wrap gap-6 border-t border-navy-600 pt-6">
+            {[
+              { label: 'Skills added', value: profile.skills.length },
+              { label: 'Interests', value: profile.interests.length },
+              { label: 'Technologies', value: profile.technologies.length },
+              { label: 'Level', value: profile.knowledge_level ?? 'Not set' },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <p className="text-2xl font-bold text-accent-400">{value}</p>
+                <p className="text-xs text-gray-500">{label}</p>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
@@ -62,36 +83,36 @@ export default function HomePage() {
             to: '/recommendations',
             icon: Star,
             label: 'Recommendations',
-            desc: 'Projects matched to your skills',
-            color: 'text-brand-600',
-            bg: 'bg-brand-50',
+            desc: 'AI-matched projects for your skills',
+            accent: 'text-accent-400',
+            bg: 'bg-accent-400/10 border-accent-400/20',
           },
           {
             to: '/search',
             icon: Search,
             label: 'Browse Projects',
-            desc: 'Search and filter all FYPs',
-            color: 'text-blue-600',
-            bg: 'bg-blue-50',
+            desc: 'Search & filter all FYPs',
+            accent: 'text-blue-400',
+            bg: 'bg-blue-500/10 border-blue-500/20',
           },
           {
             to: '/generator',
             icon: Lightbulb,
             label: 'Generate Ideas',
-            desc: 'AI-powered novel project ideas',
-            color: 'text-amber-600',
-            bg: 'bg-amber-50',
+            desc: 'Novel AI-powered project concepts',
+            accent: 'text-amber-400',
+            bg: 'bg-amber-500/10 border-amber-500/20',
           },
-        ].map(({ to, icon: Icon, label, desc, color, bg }) => (
+        ].map(({ to, icon: Icon, label, desc, accent, bg }) => (
           <Link key={to} to={to}>
-            <Card hover className="h-full cursor-pointer">
-              <div className={`mb-3 inline-flex rounded-xl p-3 ${bg}`}>
-                <Icon size={22} className={color} />
+            <Card hover className="h-full">
+              <div className={`mb-3 inline-flex rounded-xl border p-3 ${bg}`}>
+                <Icon size={22} className={accent} />
               </div>
-              <h3 className="font-semibold text-gray-900">{label}</h3>
-              <p className="mt-1 text-sm text-gray-500">{desc}</p>
-              <span className={`mt-3 inline-flex items-center gap-1 text-sm font-medium ${color}`}>
-                Go <ArrowRight size={13} />
+              <h3 className="font-semibold text-white">{label}</h3>
+              <p className="mt-1 text-sm text-gray-400">{desc}</p>
+              <span className={`mt-3 inline-flex items-center gap-1 text-sm font-medium ${accent}`}>
+                Open <ArrowRight size={13} />
               </span>
             </Card>
           </Link>
@@ -102,47 +123,35 @@ export default function HomePage() {
       <div>
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TrendingUp size={18} className="text-gray-400" />
-            <h2 className="text-lg font-semibold text-gray-900">Trending Projects</h2>
+            <TrendingUp size={18} className="text-accent-400" />
+            <h2 className="text-lg font-semibold text-white">Trending Projects</h2>
           </div>
-          <Link to="/search" className="text-sm font-medium text-brand-600 hover:text-brand-700">
-            View all
+          <Link to="/search" className="text-sm font-medium text-accent-400 hover:text-accent-300 transition-colors">
+            View all →
           </Link>
         </div>
 
         {loadingProjects ? (
-          <div className="flex justify-center py-10">
+          <div className="flex justify-center py-12">
             <Spinner />
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {projects?.projects?.map((project) => (
               <Link key={project.id} to={`/projects/${project.id}`}>
-                <Card hover className="h-full cursor-pointer">
+                <Card hover className="h-full">
                   <div className="mb-2 flex items-start justify-between gap-2">
-                    <h3 className="line-clamp-2 text-sm font-semibold text-gray-900">
-                      {project.title}
-                    </h3>
+                    <h3 className="line-clamp-2 text-sm font-semibold text-white">{project.title}</h3>
                     {project.difficulty_level && (
-                      <Badge
-                        variant={
-                          project.difficulty_level === 'hard'
-                            ? 'red'
-                            : project.difficulty_level === 'medium'
-                            ? 'yellow'
-                            : 'green'
-                        }
-                      >
+                      <Badge variant={project.difficulty_level === 'hard' ? 'red' : project.difficulty_level === 'medium' ? 'yellow' : 'green'}>
                         {project.difficulty_level}
                       </Badge>
                     )}
                   </div>
-                  <p className="mb-3 line-clamp-2 text-xs text-gray-500">{project.description}</p>
+                  <p className="mb-3 line-clamp-2 text-xs text-gray-400">{project.description}</p>
                   <div className="flex flex-wrap gap-1">
                     {project.technologies.slice(0, 3).map((tech) => (
-                      <Badge key={tech} variant="gray">
-                        {tech}
-                      </Badge>
+                      <Badge key={tech} variant="gray">{tech}</Badge>
                     ))}
                     {project.technologies.length > 3 && (
                       <Badge variant="gray">+{project.technologies.length - 3}</Badge>
@@ -157,22 +166,20 @@ export default function HomePage() {
 
       {/* Profile CTA if incomplete */}
       {!profileComplete && (
-        <Card className="border-brand-200 bg-brand-50">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand-100">
-              <BookOpen size={22} className="text-brand-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900">Your profile is incomplete</h3>
-              <p className="mt-0.5 text-sm text-gray-600">
-                Add your skills, interests, and technologies to get personalised recommendations.
-              </p>
-            </div>
-            <Link to="/profile?onboarding=true">
-              <Button variant="primary">Complete Profile</Button>
-            </Link>
+        <div className="flex items-center gap-4 rounded-xl border border-accent-500/20 bg-accent-400/5 px-6 py-5">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-accent-400/15 border border-accent-400/20">
+            <BookOpen size={22} className="text-accent-400" />
           </div>
-        </Card>
+          <div className="flex-1">
+            <h3 className="font-semibold text-white">Your profile is incomplete</h3>
+            <p className="mt-0.5 text-sm text-gray-400">
+              Add skills, interests, and technologies to get personalised recommendations.
+            </p>
+          </div>
+          <Link to="/profile?onboarding=true">
+            <Button variant="outline">Complete Profile</Button>
+          </Link>
+        </div>
       )}
     </div>
   )
