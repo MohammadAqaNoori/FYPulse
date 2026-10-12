@@ -2,7 +2,7 @@
 
 > Smart FYP Idea Discovery & Recommendation Platform
 
-FYPulse helps students find, compare, and generate Final Year Project ideas by combining intelligent web data collection with ML-powered recommendations tailored to their skills and interests.
+FYPulse helps students find, compare, and generate Final Year Project ideas By combining intelligent web data collection with ML-powered recommendations tailored to their skills and interests.
 
 ---
 
@@ -58,8 +58,7 @@ docker-compose up --build
 # Frontend
 cd frontend && npm install && npm run dev
 
-# Backend
-cd backend && pip install -r requirements.txt && uvicorn main:app --reload
+
 
 # ML Service
 cd ml_service && pip install -r requirements.txt && uvicorn main:app --port 8001 --reload
