@@ -13,7 +13,9 @@
   }
 
   body {
-    @apply bg-navy-900 text-white font-sans;
+    background-color: #0a1628;
+    color: #ffffff;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 
   /* Custom scrollbar */
@@ -22,38 +24,39 @@
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    @apply bg-navy-800;
+    background-color: #0d1f3c;
   }
   ::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-navy-500;
+    border-radius: 9999px;
+    background-color: #1e3a5f;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-accent-500;
+    background-color: #00b873;
   }
 }
 
 @layer components {
   /* Form input — dark themed */
   .input {
-    @apply w-full rounded-lg border border-navy-500 bg-navy-700 px-3 py-2 text-sm text-white
+    @apply w-full rounded-lg border px-3 py-2 text-sm text-white
            placeholder-gray-500 shadow-sm transition-colors
-           focus:border-accent-400 focus:outline-none focus:ring-1 focus:ring-accent-400
+           focus:outline-none focus:ring-1
            disabled:cursor-not-allowed disabled:opacity-50;
+    background-color: #112240;
+    border-color: #1e3a5f;
+  }
+  .input:focus {
+    border-color: #00d084;
+    --tw-ring-color: #00d084;
+  }
+  .input option {
+    background-color: #112240;
+    color: #ffffff;
   }
 
   /* Form label */
   .label {
-    @apply mb-1.5 block text-sm font-medium text-gray-300;
-  }
-
-  /* Card surface */
-  .card {
-    @apply rounded-xl border border-navy-600 bg-navy-800 p-6;
-  }
-
-  /* Active nav link underline */
-  .nav-active {
-    @apply text-accent-400 after:absolute after:bottom-0 after:left-0 after:h-0.5
-           after:w-full after:bg-accent-400 after:rounded-full;
+    @apply mb-1.5 block text-sm font-medium;
+    color: #d1d5db;
   }
 }
