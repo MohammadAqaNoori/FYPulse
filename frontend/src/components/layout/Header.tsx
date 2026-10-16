@@ -3,8 +3,9 @@ import { clsx } from 'clsx'
 import { useState } from 'react'
 import {
   LayoutDashboard, Search, Star, Lightbulb,
-  User, LogOut, Zap, ShieldCheck, Menu, X, ChevronDown,
+  User, LogOut, ShieldCheck, Menu, X, ChevronDown,
 } from 'lucide-react'
+import logo from '../../assets/FYPulseLogo.png'
 import { useAuth } from '../../context/AuthContext'
 
 const navItems = [
@@ -41,9 +42,7 @@ export function Header() {
 
         {/* Logo */}
         <NavLink to="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy-900">
-            <Zap size={17} className="text-accent-400" />
-          </div>
+          <img src={logo} alt="FYPulse" className="h-9 w-auto" />
           <span className="text-lg font-bold text-navy-900 tracking-tight">FYPulse</span>
         </NavLink>
 

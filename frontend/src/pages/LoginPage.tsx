@@ -1,9 +1,9 @@
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import { Zap } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { Button } from '../components/common/Button'
+import logo from '../assets/FYPulseLogo.png'
 
 interface FormValues { email: string; password: string }
 
@@ -31,9 +31,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-navy-900 shadow-lg">
-            <Zap size={26} className="text-accent-400" />
-          </div>
+          <img src={logo} alt="FYPulse" className="mb-3 h-16 w-auto" />
           <h1 className="text-3xl font-bold text-gray-900">Welcome back</h1>
           <p className="mt-1 text-sm text-gray-500">Sign in to your FYPulse account</p>
         </div>

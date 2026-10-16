@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Star, Search, Lightbulb, ArrowRight, TrendingUp, BookOpen, Zap, ShieldCheck } from 'lucide-react'
+import { Star, Search, Lightbulb, ArrowRight, TrendingUp, BookOpen, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { userService } from '../services/userService'
 import { projectService } from '../services/projectService'
@@ -8,6 +8,7 @@ import { Card } from '../components/common/Card'
 import { Badge } from '../components/common/Badge'
 import { Button } from '../components/common/Button'
 import { Spinner } from '../components/common/Spinner'
+import logo from '../assets/FYPulseLogo.png'
 
 export default function HomePage() {
   const { user } = useAuth()
@@ -59,7 +60,7 @@ export default function HomePage() {
         <div className="relative mx-auto max-w-7xl">
           {/* Badge pill */}
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-accent-400/30 bg-accent-400/10 px-4 py-1.5">
-            <Zap size={13} className="text-accent-400" />
+            <img src={logo} alt="" className="h-4 w-auto" />
             <span className="text-xs font-semibold tracking-wide text-accent-300">AI-Powered FYP Discovery</span>
           </div>
 
