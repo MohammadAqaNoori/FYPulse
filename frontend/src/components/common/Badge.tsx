@@ -10,24 +10,22 @@ interface BadgeProps {
 }
 
 const variants: Record<BadgeVariant, string> = {
-  default: 'bg-accent-400/15 text-accent-300 border border-accent-400/20',
-  blue:    'bg-blue-500/15 text-blue-300 border border-blue-500/20',
-  green:   'bg-emerald-500/15 text-emerald-300 border border-emerald-500/20',
-  yellow:  'bg-amber-500/15 text-amber-300 border border-amber-500/20',
-  red:     'bg-red-500/15 text-red-300 border border-red-500/20',
-  purple:  'bg-purple-500/15 text-purple-300 border border-purple-500/20',
-  gray:    'bg-navy-600/80 text-gray-400 border border-navy-500',
+  default: 'bg-accent-50 text-accent-700 border border-accent-200',
+  blue:    'bg-blue-50 text-blue-700 border border-blue-100',
+  green:   'bg-emerald-50 text-emerald-700 border border-emerald-100',
+  yellow:  'bg-amber-50 text-amber-700 border border-amber-100',
+  red:     'bg-red-50 text-red-600 border border-red-100',
+  purple:  'bg-purple-50 text-purple-700 border border-purple-100',
+  gray:    'bg-gray-50 text-gray-600 border border-gray-100',
 }
 
 export function Badge({ children, variant = 'default', className }: BadgeProps) {
   return (
-    <span
-      className={clsx(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-        variants[variant],
-        className
-      )}
-    >
+    <span className={clsx(
+      'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+      variants[variant],
+      className
+    )}>
       {children}
     </span>
   )

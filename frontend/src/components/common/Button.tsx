@@ -15,15 +15,15 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    'bg-accent-400 text-navy-900 font-semibold hover:bg-accent-300 focus-visible:ring-accent-400 disabled:bg-accent-700 disabled:text-navy-600 shadow-glow',
+    'bg-accent-500 text-white font-semibold hover:bg-accent-600 focus-visible:ring-accent-400 shadow-sm',
   secondary:
-    'bg-navy-700 text-gray-200 border border-navy-500 hover:bg-navy-600 hover:text-white focus-visible:ring-navy-400',
+    'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 focus-visible:ring-gray-300 shadow-sm',
   outline:
-    'bg-transparent text-accent-400 border border-accent-400 hover:bg-accent-400/10 focus-visible:ring-accent-400',
+    'bg-transparent text-accent-600 border border-accent-400 hover:bg-accent-50 focus-visible:ring-accent-300',
   ghost:
-    'bg-transparent text-gray-400 hover:bg-navy-700 hover:text-white focus-visible:ring-navy-400',
+    'bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus-visible:ring-gray-300',
   danger:
-    'bg-red-600 text-white hover:bg-red-500 focus-visible:ring-red-500',
+    'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-400 shadow-sm',
 }
 
 const sizes: Record<ButtonSize, string> = {
@@ -46,8 +46,8 @@ export function Button({
     <button
       disabled={disabled || loading}
       className={clsx(
-        'inline-flex items-center justify-center gap-2 rounded-lg',
-        'transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-900',
+        'inline-flex items-center justify-center gap-2 rounded-lg font-medium',
+        'transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
         'disabled:cursor-not-allowed disabled:opacity-50',
         variants[variant],
         sizes[size],
