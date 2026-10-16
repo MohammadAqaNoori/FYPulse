@@ -220,10 +220,15 @@ def _run_github_scrape(query: str, max_results: int):
     from datetime import datetime
 
     scraper = GitHubScraper()
-    raw = scraper.scrape(query, max_results=max_results)
+
+    # Use the advanced scraper for generic "final year project" queries
+    if "final year" in query.lower() or "fyp" in query.lower() or query.strip() == "final year project":
+        raw = scraper.scrape_advanced_fyps(max_per_query=min(max_results, 30))
+    else:
+        raw = scraper.scrape(query, max_results=max_results)
+
     processed = preprocess_batch(raw)
 
-    # Save to JSON
     data = [p.__dict__ for p in processed]
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     path = os.path.join(os.path.dirname(__file__), "..", "data", "raw", f"github_{timestamp}.json")
@@ -231,7 +236,6 @@ def _run_github_scrape(query: str, max_results: int):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-    # Re-fit embedding model with all projects
     _refit_embeddings()
 
 

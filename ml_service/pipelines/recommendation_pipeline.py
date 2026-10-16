@@ -1,9 +1,9 @@
 """
-Recommendation Pipeline
-Scores and ranks projects against a student's profile.
-Returns match score + breakdown explaining WHY a project matches.
+Recommendation Pipeline — improved scoring v2
+Combines semantic similarity, skill overlap, domain overlap, difficulty fit,
+and popularity with smarter normalization and partial-match bonuses.
 """
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional
 from dataclasses import dataclass, field
 import numpy as np
 
@@ -14,20 +14,18 @@ from utils.logger import logger
 
 @dataclass
 class StudentProfile:
-    """Represents a student's preferences for matching."""
     user_id: int
     skills: List[str]
     interests: List[str]
     technologies: List[str]
-    knowledge_level: str        # beginner | intermediate | advanced
+    knowledge_level: str
     preferred_domains: List[str] = field(default_factory=list)
     preferred_project_type: Optional[str] = None
 
 
 @dataclass
 class ProjectCandidate:
-    """A project to be scored against a profile."""
-    key: str                    # project ID
+    key: str
     title: str
     combined_text: str
     technologies: List[str]
@@ -38,30 +36,70 @@ class ProjectCandidate:
 
 @dataclass
 class MatchResult:
-    """Match result for a single project against a profile."""
     key: str
     title: str
-    match_score: float          # 0.0 - 1.0  overall
-    breakdown: Dict[str, float] # per-dimension scores
-    match_reasons: List[str]    # human-readable explanations
+    match_score: float
+    breakdown: Dict[str, float]
+    match_reasons: List[str]
 
 
-# ── Scoring weights ────────────────────────────────────────────────────────────
+# ── Scoring weights (must sum to 1.0) ─────────────────────────────────────────
 WEIGHTS = {
-    "semantic":    0.35,    # embedding similarity (query vs project text)
-    "skills":      0.25,    # skill/technology overlap
-    "interests":   0.20,    # domain/interest overlap
-    "difficulty":  0.15,    # difficulty suitability
-    "popularity":  0.05,    # project popularity bonus
+    "semantic":   0.40,   # TF-IDF cosine similarity — most important signal
+    "skills":     0.28,   # tech/skill overlap (improved partial matching)
+    "interests":  0.18,   # domain/interest overlap
+    "difficulty": 0.09,   # level suitability
+    "popularity": 0.05,   # stars bonus
 }
 
 DIFFICULTY_RANK = {"beginner": 1, "intermediate": 2, "advanced": 3}
 
+# Technology synonym groups — expand matching beyond exact strings
+TECH_SYNONYMS: Dict[str, set] = {
+    "python":       {"py", "python3", "python2"},
+    "javascript":   {"js", "node", "nodejs", "typescript", "ts"},
+    "react":        {"reactjs", "react.js", "nextjs", "next"},
+    "machine-learning": {"ml", "sklearn", "scikit-learn", "scikit"},
+    "deep-learning":    {"dl", "neural-network", "nn", "tensorflow", "keras", "pytorch", "torch"},
+    "ai":           {"artificial-intelligence", "machine-learning", "deep-learning"},
+    "backend":      {"django", "flask", "fastapi", "nodejs", "express", "spring", "laravel"},
+    "full-stack":   {"fullstack", "full stack", "mern", "mean", "django", "react"},
+    "sql":          {"mysql", "postgresql", "sqlite", "postgres", "database"},
+    "computer-vision": {"cv", "opencv", "vision", "yolo", "cnn"},
+    "nlp":          {"natural-language-processing", "bert", "gpt", "transformers", "text-mining"},
+}
+
+
+def _expand_terms(terms: List[str]) -> set:
+    """Expand a list of tech/skill terms using synonym groups."""
+    expanded = set()
+    for t in terms:
+        t_norm = normalize_technology(t)
+        expanded.add(t_norm)
+        # Add synonyms
+        for canonical, synonyms in TECH_SYNONYMS.items():
+            if t_norm == canonical or t_norm in synonyms:
+                expanded.add(canonical)
+                expanded.update(synonyms)
+    return expanded
+
+
+def _soft_overlap(set_a: set, set_b: set) -> float:
+    """
+    Improved overlap score:
+    - Uses Dice coefficient instead of Jaccard (less penalised for large sets)
+    - Returns 0–1
+    """
+    if not set_a and not set_b:
+        return 0.0
+    intersection = set_a & set_b
+    if not intersection:
+        return 0.0
+    dice = 2 * len(intersection) / (len(set_a) + len(set_b))
+    return round(dice, 4)
+
 
 class RecommendationPipeline:
-    """
-    Scores projects against a student profile and returns ranked recommendations.
-    """
 
     def __init__(self, pipeline: Optional[EmbeddingPipeline] = None):
         self.embedding = pipeline or get_pipeline()
@@ -72,73 +110,84 @@ class RecommendationPipeline:
         candidates: List[ProjectCandidate],
         top_k: int = 10,
     ) -> List[MatchResult]:
-        """
-        Score all candidates against the profile and return top_k matches.
-        """
         if not candidates:
             return []
 
-        # Build profile query text for semantic matching
         profile_text = self._build_profile_text(profile)
+
+        # Pre-compute profile vector once
+        try:
+            profile_vec = self.embedding.transform_one(profile_text)
+        except RuntimeError:
+            profile_vec = None
 
         results = []
         for candidate in candidates:
-            result = self._score(profile, profile_text, candidate)
+            result = self._score(profile, profile_vec, candidate)
             results.append(result)
 
-        # Sort by overall match score descending
         results.sort(key=lambda r: r.match_score, reverse=True)
         return results[:top_k]
 
     def _score(
         self,
         profile: StudentProfile,
-        profile_text: str,
+        profile_vec: Optional[np.ndarray],
         candidate: ProjectCandidate,
     ) -> MatchResult:
+        breakdown: Dict[str, float] = {}
 
-        breakdown = {}
-
-        # 1. Semantic similarity via embeddings
-        try:
-            pv = self.embedding.transform_one(profile_text)
-            cv = self.embedding.transform_one(candidate.combined_text)
-            semantic = float(np.dot(pv, cv) / (np.linalg.norm(pv) * np.linalg.norm(cv) + 1e-9))
-            breakdown["semantic"] = round(max(0.0, semantic), 4)
-        except RuntimeError:
+        # ── 1. Semantic similarity ─────────────────────────────────────────────
+        if profile_vec is not None:
+            try:
+                cv = self.embedding.transform_one(candidate.combined_text)
+                norm = np.linalg.norm(profile_vec) * np.linalg.norm(cv) + 1e-9
+                semantic = float(np.dot(profile_vec, cv) / norm)
+                # Rescale: cosine in TF-IDF space rarely exceeds 0.4 for cross-domain
+                # Stretch it to 0–1 range using soft clipping
+                semantic = min(max(semantic, 0.0), 1.0)
+                # Boost: rescale from [0, 0.5] → [0, 1] to spread scores more
+                semantic = min(semantic * 2.0, 1.0)
+                breakdown["semantic"] = round(semantic, 4)
+            except Exception:
+                breakdown["semantic"] = 0.0
+        else:
             breakdown["semantic"] = 0.0
 
-        # 2. Skill / technology overlap (Jaccard similarity)
-        profile_techs = set(normalize_technology(t) for t in profile.skills + profile.technologies)
-        project_techs = set(normalize_technology(t) for t in candidate.technologies)
-        if profile_techs or project_techs:
-            intersection = profile_techs & project_techs
-            union = profile_techs | project_techs
-            breakdown["skills"] = round(len(intersection) / len(union), 4) if union else 0.0
-        else:
-            breakdown["skills"] = 0.0
+        # ── 2. Skill / technology overlap with synonym expansion ──────────────
+        profile_techs = _expand_terms(profile.skills + profile.technologies)
+        project_techs = _expand_terms(candidate.technologies)
+        breakdown["skills"] = _soft_overlap(profile_techs, project_techs)
 
-        # 3. Interest / domain overlap
-        profile_interests = set(i.lower() for i in profile.interests + profile.preferred_domains)
-        project_domains = set(d.lower() for d in candidate.domains)
-        if profile_interests or project_domains:
-            intersection = profile_interests & project_domains
-            union = profile_interests | project_domains
-            breakdown["interests"] = round(len(intersection) / len(union), 4) if union else 0.0
-        else:
-            breakdown["interests"] = 0.0
+        # ── 3. Interest / domain overlap ──────────────────────────────────────
+        profile_interests = _expand_terms(profile.interests + profile.preferred_domains)
+        project_domains   = _expand_terms(candidate.domains)
+        breakdown["interests"] = _soft_overlap(profile_interests, project_domains)
 
-        # 4. Difficulty suitability (1.0 if match, 0.5 if one level off, 0.0 if two levels off)
+        # Also check if any profile interest keyword appears in title/combined_text
+        title_lower = candidate.combined_text.lower()
+        for interest in profile.interests:
+            if interest.lower() in title_lower:
+                breakdown["interests"] = min(breakdown["interests"] + 0.15, 1.0)
+                break
+
+        # ── 4. Difficulty suitability ─────────────────────────────────────────
         student_rank = DIFFICULTY_RANK.get(profile.knowledge_level, 2)
         project_rank = DIFFICULTY_RANK.get(candidate.difficulty_level, 2)
         diff = abs(student_rank - project_rank)
-        breakdown["difficulty"] = {0: 1.0, 1: 0.5, 2: 0.0}.get(diff, 0.0)
+        breakdown["difficulty"] = {0: 1.0, 1: 0.6, 2: 0.2}.get(diff, 0.2)
 
-        # 5. Popularity bonus (normalized 0-1)
+        # ── 5. Popularity bonus ────────────────────────────────────────────────
         breakdown["popularity"] = round(min(candidate.popularity_score, 1.0), 4)
 
-        # Weighted sum
+        # ── Weighted sum ───────────────────────────────────────────────────────
         overall = sum(WEIGHTS[k] * v for k, v in breakdown.items())
+
+        # Soft floor: even a partial semantic match should give at least 30%
+        # to avoid discouraging valid but different-worded matches
+        if breakdown["semantic"] > 0.1 or breakdown["skills"] > 0.0:
+            overall = max(overall, 0.30)
+
         overall = round(min(overall, 1.0), 4)
 
         reasons = self._build_reasons(profile, candidate, breakdown)
@@ -152,8 +201,17 @@ class RecommendationPipeline:
         )
 
     def _build_profile_text(self, profile: StudentProfile) -> str:
-        """Convert profile into a text query for semantic embedding."""
-        parts = profile.skills + profile.interests + profile.technologies + profile.preferred_domains
+        """
+        Build a rich profile query text.
+        Repeat high-importance terms to give them more TF-IDF weight.
+        """
+        parts = (
+            profile.skills * 3 +          # skills are most important
+            profile.technologies * 2 +
+            profile.interests * 2 +
+            profile.preferred_domains +
+            [profile.knowledge_level]
+        )
         return " ".join(parts)
 
     def _build_reasons(
@@ -162,45 +220,53 @@ class RecommendationPipeline:
         candidate: ProjectCandidate,
         breakdown: Dict[str, float],
     ) -> List[str]:
-        """Generate human-readable match explanations."""
         reasons = []
 
-        matched_techs = set(normalize_technology(t) for t in profile.skills + profile.technologies) \
-                        & set(normalize_technology(t) for t in candidate.technologies)
-        if matched_techs:
-            reasons.append(f"Your skills match: {', '.join(list(matched_techs)[:3])}")
+        # Tech matches (show the actual matched terms)
+        matched = _expand_terms(profile.skills + profile.technologies) & _expand_terms(candidate.technologies)
+        # Only show canonical terms that appear in original lists
+        display = [
+            t for t in (profile.skills + profile.technologies)
+            if normalize_technology(t) in matched
+        ][:3]
+        if display:
+            reasons.append(f"Your skills match: {', '.join(display)}")
 
-        matched_domains = set(i.lower() for i in profile.interests) \
-                          & set(d.lower() for d in candidate.domains)
+        # Domain matches
+        matched_domains = (
+            set(i.lower() for i in profile.interests) &
+            set(d.lower() for d in candidate.domains)
+        )
         if matched_domains:
             reasons.append(f"Matches your interest in: {', '.join(matched_domains)}")
 
-        if breakdown["difficulty"] == 1.0:
-            reasons.append(f"Difficulty ({candidate.difficulty_level}) is perfect for your level")
-        elif breakdown["difficulty"] == 0.5:
-            reasons.append(f"Difficulty is slightly different from your level — good stretch goal")
+        # Difficulty
+        if breakdown["difficulty"] >= 1.0:
+            reasons.append(f"Difficulty ({candidate.difficulty_level}) fits your level perfectly")
+        elif breakdown["difficulty"] >= 0.6:
+            reasons.append(f"Good stretch project — slightly above your current level")
 
-        if breakdown["semantic"] > 0.6:
-            reasons.append("Strong semantic alignment with your profile")
+        # Semantic
+        if breakdown["semantic"] > 0.5:
+            reasons.append("Strong relevance to your skills and interests")
+        elif breakdown["semantic"] > 0.25:
+            reasons.append("Relevant to your profile")
 
-        if candidate.popularity_score > 0.5:
-            reasons.append("Well-regarded project in the community")
+        # Popularity
+        if candidate.popularity_score > 0.4:
+            reasons.append("Highly regarded project in the community")
 
-        return reasons or ["General match based on your profile"]
+        return reasons or ["Relevant based on your overall profile"]
 
 
 def build_candidates_from_projects(projects: list) -> List[ProjectCandidate]:
-    """
-    Convert a list of preprocessed project dicts or ProcessedProject objects
-    into ProjectCandidate objects for the recommendation pipeline.
-    """
     candidates = []
     for p in projects:
         if isinstance(p, dict):
             candidates.append(ProjectCandidate(
                 key=p.get("source_url", str(id(p))),
                 title=p.get("title", ""),
-                combined_text=p.get("combined_text", ""),
+                combined_text=p.get("combined_text", p.get("title", "")),
                 technologies=p.get("technologies", []),
                 domains=p.get("domains", []),
                 difficulty_level=p.get("difficulty_level", "intermediate"),
@@ -210,7 +276,7 @@ def build_candidates_from_projects(projects: list) -> List[ProjectCandidate]:
             candidates.append(ProjectCandidate(
                 key=p.source_url,
                 title=p.title,
-                combined_text=p.combined_text,
+                combined_text=getattr(p, "combined_text", p.title),
                 technologies=p.technologies,
                 domains=p.domains,
                 difficulty_level=p.difficulty_level,

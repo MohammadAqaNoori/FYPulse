@@ -35,11 +35,11 @@ class EmbeddingPipeline:
 
     def __init__(self):
         self.vectorizer = TfidfVectorizer(
-            max_features=5000,
-            ngram_range=(1, 2),     # unigrams + bigrams
-            min_df=2,               # ignore terms appearing in fewer than 2 docs
-            max_df=0.85,            # ignore terms appearing in more than 85% of docs
-            sublinear_tf=True,      # apply log normalization to TF
+            max_features=8000,
+            ngram_range=(1, 2),
+            min_df=1,               # keep all terms — small corpus
+            max_df=0.90,
+            sublinear_tf=True,
         )
         self._fitted = False
         self._matrix: Optional[np.ndarray] = None
