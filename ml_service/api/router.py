@@ -44,6 +44,7 @@ async def recommend(request: RecommendRequest):
     ep = EmbeddingPipeline()
     loaded = ep.load()
     if not loaded:
+        
         return {"recommendations": [], "message": "No projects indexed yet. Run /ml/scrape first."}
 
     # Load projects from saved JSON files
